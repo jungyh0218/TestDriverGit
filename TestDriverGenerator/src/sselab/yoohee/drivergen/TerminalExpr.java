@@ -1,9 +1,9 @@
 package sselab.yoohee.drivergen;
 
-public class TerminalExp extends Expression{
+public class TerminalExpr extends Expr{
 	private String code;
 	
-	public TerminalExp(){
+	public TerminalExpr(){
 		this.code = ""; //implement it later
 	}
 	
