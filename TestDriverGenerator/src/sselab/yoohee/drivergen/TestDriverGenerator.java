@@ -23,7 +23,7 @@ import sselab.cadd.variable.Variable;
  */
 public class TestDriverGenerator {
 	
-	private static final String inFileName = "test.c";
+	private static final String inFileName = "input.c";
 	private static final String outFileName = "output.c";
 	//private static final String resultFileName = "testdriver.c";
 	private static DriverGenerator generator = null;
@@ -49,6 +49,7 @@ public class TestDriverGenerator {
 		
 		generator = new DriverGenerator(statements);
 		code = generator.getCode();
+		System.out.println(code);
 
 	}
 	

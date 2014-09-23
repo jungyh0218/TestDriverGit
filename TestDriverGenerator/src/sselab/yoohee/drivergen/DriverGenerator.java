@@ -52,11 +52,11 @@ public class DriverGenerator {
 		String expString= "";
 		expString += "assert(";
 		for(FunctionCall n: calls){
-			expString += n.getCode();
+			expString += "(" + n.getCode() + ")";
 			if(calls.indexOf(n) < calls.size()-1)
 				expString += " || ";
 		}
-		expString += ")\n";
+		expString += ");\n";
 		return expString;
 		//add parameter constraints
 	}

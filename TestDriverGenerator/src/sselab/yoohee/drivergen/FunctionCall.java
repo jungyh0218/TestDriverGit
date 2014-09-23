@@ -7,6 +7,7 @@ import sselab.cadd.cfg.expression.Expression;
 import sselab.cadd.cfg.expression.type.*;
 import sselab.cadd.cfg.node.RefStatement;
 import sselab.cadd.cfg.node.Statement;
+import sselab.cadd.cfg.node.specifiednode.DeclarationStatement;
 
 /**
  * FunctionCall class
@@ -19,11 +20,11 @@ import sselab.cadd.cfg.node.Statement;
 public class FunctionCall {
 	private String code = ""; //the source code of generated constraints.
 	public CallExpression callExpr = null;
-	private Stack<Expr> stack; //the stack to make a concatenated expression
+	private Stack<TerminalExpr> stack = new Stack<TerminalExpr>(); //the stack to make a concatenated expression
 	private Statement statement = null;
 	public FunctionCall(Statement statement){
 		this.statement = statement;
-		callExpr = (CallExpression) this.statement.getExpression();
+		//callExpr = (CallExpression) this.statement.getExpression();
 	}
 	
 	/**
@@ -31,22 +32,24 @@ public class FunctionCall {
 	 * @return code
 	 */
 	public String getCode(){
+		gatherConstraints();
 		code = concatConstraints().getCode();
 		return code;
 	}
 	
 	/**
 	 * gather constraints from CFG
+	 * Rough version. Have to implement correct method later.
 	 */
 	public void gatherConstraints(){
-		ArrayList<Statement> beforeStatements = statement.getBeforeNodes();
-		for(Statement s : beforeStatements){
-			if(s instanceof RefStatement){
-				//TODO: set statement 'marked' <-- but how? ask it to KDW.
-				System.out.println(s.getExpression().getRawString());
-				Expr e = new TerminalExpr(s.getExpression());
-				stack.push(e);
+		ArrayList<Statement> beforeStatements = new ArrayList<Statement>();
+		Statement temp = statement;
+		while(!(temp instanceof DeclarationStatement)){
+			if(!temp.getBeforeNodes().get(0).getExpression().getRawString().equals("")){
+				System.out.println(temp.getBeforeNodes().get(0).getExpression().getRawString());
+				stack.push(new TerminalExpr(temp.getBeforeNodes().get(0).getExpression()));
 			}
+			temp = temp.getBeforeNodes().get(0);
 		}
 	}
 	
@@ -56,17 +59,17 @@ public class FunctionCall {
 	 */
 	public ConcatExpr concatConstraints(){
 		ConcatExpr concat = null;
-		ConcatExpr rchild = null;
 		
-		Expr e = stack.pop();
-		if(stack.isEmpty()){
-			rchild = new ConcatExpr((TerminalExpr)e);
+		while(!stack.isEmpty()){
+			ConcatExpr rchild = null;
 			if(concat == null){
-				concat = rchild;
-				return concat;
+				concat = new ConcatExpr(stack.pop());
+			}
+			else{
+				rchild = concat;
+				concat = new ConcatExpr(stack.pop(), "&&", rchild);
 			}
 		}
-		concat = new ConcatExpr((TerminalExpr)e, "&&", concatConstraints());		
 		return concat;
 	}
 	

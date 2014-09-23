@@ -21,6 +21,16 @@ public class ConcatExpr extends Expr{
 		this.operator = op;
 		this.rchild = r;
 	}
+	
+	public String getCode(){
+		String code = "";
+		code += lchild.getCode();
+		if(rchild != null){
+		code += " " + operator + " ";
+		code += rchild.getCode();
+		}
+		return code;
+	}
 
 	
 	
