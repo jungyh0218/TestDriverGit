@@ -2,20 +2,22 @@ package sselab.yoohee.drivergen;
 
 import java.util.ArrayList;
 
+import sselab.cadd.cfg.Function;
 import sselab.cadd.cfg.expression.type.CallExpression;
 import sselab.cadd.cfg.node.Statement;
 
 /**
  * DriverGenerator class
  * This class generates whole code of a test driver.
- * @version 2014-09-16
+ * @version 2014-10-02
  * @author yoohee
  * 
  *
  */
 public class DriverGenerator {
 	private String code = "";
-	public ArrayList<FunctionCall> calls = new ArrayList<FunctionCall>();
+	private Function targetFunction = null;
+	private ArrayList<FunctionCall> calls = new ArrayList<FunctionCall>();
 	
 	public DriverGenerator(ArrayList<Statement> _statements){
 		for(Statement s : _statements){
@@ -27,7 +29,7 @@ public class DriverGenerator {
 		code += "void testDriver()"
 				+ "{";
 		code += addVarSymbolization();
-		code += addRestrictions();
+		//code += addRestrictions();
 		code += addConstraints();
 		callTargetFunction();
 		code += "}\n";
@@ -36,6 +38,7 @@ public class DriverGenerator {
 	
 	private String addVarSymbolization(){
 		String expString = "";
+		
 		//add initialization
 		//symbolize them (CREST_int(varName);)
 		return expString;
@@ -45,7 +48,7 @@ public class DriverGenerator {
 		String expString= "";
 		expString += "assert(";
 		//add global variable restriction
-		expString += ")\n";
+		expString += ");\n";
 		return expString;
 	}
 	private String addConstraints(){

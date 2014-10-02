@@ -1,7 +1,7 @@
 /*
 main
 
-ff
+f1
 main
 */
 void main(){}
@@ -14,16 +14,19 @@ void main(){}
 //functionDeclaration
 //globalDeclaration!!
 //functions
-int ff(int p1, int p2){
-return p1+p2;
+void f1(int a, int b){
+printf("%d%d\n", a, b);
 }
 int main(){
-int a;
-int b;
-a = 3;
-ff(a, a);
-a = 4;
-b = 10;
-ff(a, b);
+int n1;
+int n2;
+//---int s1;
+//---int s2;
+n2 = 3;
+n1 = 7;
+f1(n1, n2);
+n1 = 5;
+n2 = 6;
+f1(n1, n2);
 return 0;
 }

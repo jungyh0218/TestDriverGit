@@ -23,10 +23,9 @@ import sselab.cadd.variable.Variable;
  */
 public class TestDriverGenerator {
 	
-	private static final String inFileName = "input.c";
-	private static final String outFileName = "output.c";
+	private static final String inFileName = "input3.c";
+	private static final String outFileName = "output3.c";
 	//private static final String resultFileName = "testdriver.c";
-	private static DriverGenerator generator = null;
 	private static String code = "";
 	
 	
@@ -41,13 +40,14 @@ public class TestDriverGenerator {
 		ArrayList<Statement> statements = new ArrayList<Statement>();
 		for(Function f : ca.getAnalyzeResult().getFunctions()){
 			for(Statement s : f.getWhoCallThisCFG()){
-				gatherCalls(s.getExpression(), expressions);
-				statements.add(s);
-			}
-			
+				//get only 'sliced' statements
+				if(s.isMarked()){
+					gatherCalls(s.getExpression(), expressions);
+					statements.add(s);
+				}
+			}	
 		}
-		
-		generator = new DriverGenerator(statements);
+		DriverGenerator generator = new DriverGenerator(statements);
 		code = generator.getCode();
 		System.out.println(code);
 
