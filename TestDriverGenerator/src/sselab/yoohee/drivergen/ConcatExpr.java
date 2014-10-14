@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 import sselab.cadd.cfg.expression.Expression;
 /**
- * @version 2014-09-19
+ * @version 2014-10-14
  * @author yoohee
  *
  */
 public class ConcatExpr extends Expr{
-	TerminalExpr lchild = null;
+	Expr lchild = null;
 	String operator = "";
-	ConcatExpr rchild = null;
+	Expr rchild = null;
 	
 	public ConcatExpr(TerminalExpr terminal){
 		this.lchild = terminal;
@@ -21,7 +21,24 @@ public class ConcatExpr extends Expr{
 		this.operator = op;
 		this.rchild = r;
 	}
-	
+	public ConcatExpr(ConcatExpr l, String op, ConcatExpr r){
+		this.lchild = l;
+		this.operator = op;
+		this.rchild = r;
+	}
+	public ConcatExpr(ConcatExpr l, String op, TerminalExpr r){
+		this.lchild = l;
+		this.operator = op;
+		this.rchild = r;
+	}
+	public ConcatExpr(Expr terminal){
+		this.lchild = terminal;
+	}
+	public ConcatExpr(Expr l, String op, Expr r){
+		this.lchild = l;
+		this.operator = op;
+		this.rchild = r;
+	}
 	public String getCode(){
 		String code = "";
 		code += lchild.getCode();

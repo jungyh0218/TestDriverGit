@@ -17,7 +17,7 @@ import sselab.cadd.variable.Variable;
  * The class that get sliced source code
  * and control flow graph based on it
  * and get driver source code and print it out.
- * @version 2014-09-16
+ * @version 2014-10-10
  * @author yoohee
  *
  */
@@ -35,7 +35,11 @@ public class TestDriverGenerator {
 		//code analyzing
 		CodeAnt ca = new CodeAnt();
 		System.out.println("codeant start");
-		ca.analyze(inFileName, outFileName); //analyze and get the sliced code
+		ca.analyze(inFileName, CodeAnt.CodeAnt_RELEASE, CodeAnt.CodeAnt_Analyze_slice); //analyze and get the sliced code
+		/*for(Function f : ca.getAnalyzeResult().getFunctions()){
+			f.print();
+		}*/
+		ca.printCFGInFile(outFileName);
 		ArrayList<Expression> expressions = new ArrayList<Expression>();
 		ArrayList<Statement> statements = new ArrayList<Statement>();
 		for(Function f : ca.getAnalyzeResult().getFunctions()){

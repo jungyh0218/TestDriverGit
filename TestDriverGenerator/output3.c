@@ -4,7 +4,6 @@ main
 f1
 main
 */
-void main(){}
 //preprocessor
 #include <stdio.h>
 //structDeclaration
