@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Stack;
 
 import sselab.cadd.cfg.expression.Expression;
 import sselab.cadd.cfg.expression.type.*;
+import sselab.cadd.cfg.node.BranchStatement;
+import sselab.cadd.cfg.node.RefStatement;
 import sselab.cadd.cfg.node.Statement;
 import sselab.cadd.cfg.node.specifiednode.DeclarationStatement;
 import sselab.cadd.variable.Operator;
@@ -15,7 +18,7 @@ import sselab.cadd.variable.Operator;
  * FunctionCall class
  * This class contains Statement, CallExpression 
  * and the code of generated(concatenated) statement
- * @version 2014-10-14
+ * @version 2014-10-25
  * @author yoohee
  *
  */
@@ -23,7 +26,7 @@ public class FunctionCall {
 	private String code = ""; //the source code of generated constraints.
 	ArrayList<Expression> paramList = new ArrayList<Expression>();
 	//The queue of gathered constraints
-	private Queue<Expr> queue = new LinkedList<Expr>(); 
+	private Stack<Expr> exprStack = new Stack<Expr>(); 
 	private Statement statement = null;
 	
 	public FunctionCall(Statement statement){
@@ -53,31 +56,10 @@ public class FunctionCall {
 		Statement currentStatement = statement;
 		ArrayList<Statement> beforeStatements = 
 				currentStatement.getBeforeNodes();
-		Expression currentExpr = currentStatement.getExpression();
-		String currentExprString;
-		boolean gatheredAll = false;
-		/*while(!gatheredAll){
-			for(Statement b : beforeStatements){
-				currentExpr = b.getExpression();
-				currentExprString = currentExpr.getRawString();
-				//if current statement doesn't have its string value(before function head)
-				if(currentExprString.equals("")){
-					beforeStatements = currentStatement.getBeforeNodes();
-					continue;
-				}
-				if(currentExpr instanceof BinaryExpression){
-					gatherBinaryExpr((BinaryExpression)currentExpr, paramList);
-				}		
-			}
-			if(paramList.isEmpty())
-				gatheredAll = true;
-			beforeStatements = currentStatement.getBeforeNodes();
-		}*/
-		
-		gatherFromEachBeforeNodes(beforeStatements, paramList);
+		gatherConstraintsFromEachBeforeNodes(beforeStatements, paramList);
 	}
 	
-	private void gatherFromEachBeforeNodes(
+	private void gatherConstraintsFromEachBeforeNodes(
 		ArrayList<Statement> beforeStmts, ArrayList<Expression>params){
 		ArrayList<Statement> before = beforeStmts;
 		if(params.isEmpty()){
@@ -87,16 +69,71 @@ public class FunctionCall {
 			Expression current = b.getExpression();
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression>cloneList=(ArrayList<Expression>)params.clone();
-			if(current instanceof BinaryExpression)
+			if(b instanceof BranchStatement){
+				//now: only can process atomic binary condition.
+				//have to fixed later-->to process complex binary conditions.
 				gatherBinaryExpr((BinaryExpression)current, cloneList);
-			gatherFromEachBeforeNodes(b.getBeforeNodes(), cloneList);
+				Expr branch = exprStack.pop();
+				Expr child = exprStack.peek();
+				//if 'else' case, add negation.
+				if(!getThenOrElse((BranchStatement)b, child)){
+					ConcatExpr temp = new ConcatExpr("!", branch);
+					exprStack.push(temp);
+				}
+			}
+			else if(current instanceof BinaryExpression){
+				gatherBinaryExpr((BinaryExpression)current, cloneList);
+			}
+			if(!cloneList.isEmpty()){
+				gatherConstraintsFromEachBeforeNodes(b.getBeforeNodes(), cloneList);
+			}
+			pushGatheredConstraintsIntoStack();
+			ConcatExpr eachPathConstraint = concatConstraints("||");
+			exprStack.push(eachPathConstraint);
 		}
-		//ConcatExpr temp = concatConstraints("||");
-				//queue.offer(temp);
-		
 	}
+	void pushGatheredConstraintsIntoStack(){
+		Expr temp1 = null;		
+		Expr temp2 = null;
+		if(!exprStack.empty()){
+			temp1 = exprStack.pop();
+			if(!exprStack.empty())
+				temp2 = exprStack.pop();
+		}
+		if(temp2 == null){
+			exprStack.push(temp1);
+		}
+		else
+			exprStack.push(new ConcatExpr(temp1, "&&", temp2));
+	}
+
 	
-	
+	boolean getThenOrElse(BranchStatement branch, Expr child){
+		Statement branchToCompare = branch.getFalseNode();
+		Expression exprToCompare_original = branchToCompare.getExpression();
+		if(exprToCompare_original instanceof BinaryExpression){
+			BinaryExpression exprToCompare =
+					(BinaryExpression)exprToCompare_original;
+			Expr temp = null;
+			if(exprToCompare.getOperand1() instanceof IdExpression 
+					|| exprToCompare.getOperand() instanceof UnaryExpression){
+				if(exprToCompare.getOperator() == Operator.ASSIGN){
+					temp = new TerminalExpr(
+							((BinaryExpression) exprToCompare).getOperand1(),
+							"==",
+							((BinaryExpression) exprToCompare).getOperand2()
+						);			
+				}
+				else{
+				temp = new TerminalExpr(exprToCompare);
+				}
+				
+				if(temp.getCode().equals(child.getCode()))
+					return false; //else statement
+			}	
+		}
+		return true;
+	}
 	/**
 	 * concatenate TerminalExpr constraints 
 	 * and make a new ConcatExpr object of full constraint.
@@ -106,15 +143,15 @@ public class FunctionCall {
 	private ConcatExpr concatConstraints(String operator){
 		ConcatExpr concat = null;
 		
-		while(!queue.isEmpty()){
-			ConcatExpr rchild = null;
+		while(!exprStack.isEmpty()){
+			ConcatExpr lchild = null;
 			if(concat == null){
-				concat = new ConcatExpr(queue.poll());
+				concat = new ConcatExpr(exprStack.pop());
 			}
 			else{
-				rchild = concat;
+				lchild = concat;
 				concat = new ConcatExpr(
-						queue.poll(), operator, rchild);
+						lchild, operator, exprStack.pop());
 			}
 		}
 		return concat;
@@ -146,11 +183,11 @@ public class FunctionCall {
 		//if the operand1 is id name, then it's a terminal node.
 		if(lChild instanceof IdExpression || lChild instanceof UnaryExpression){
 			if(currentExpr.getOperator() == Operator.ASSIGN){
-				queue.offer(new TerminalExpr(currentExpr.getOperand1(),
+				this.exprStack.push(new TerminalExpr(currentExpr.getOperand1(),
 						"==", currentExpr.getOperand2()));
 			}
 			else
-				queue.offer(new TerminalExpr(currentExpr));
+				exprStack.push(new TerminalExpr(currentExpr));
 			
 			removeFromList(currentExpr, paramList);
 			return;

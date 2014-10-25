@@ -23,8 +23,8 @@ import sselab.cadd.variable.Variable;
  */
 public class TestDriverGenerator {
 	
-	private static final String inFileName = "input3.c";
-	private static final String outFileName = "output3.c";
+	private static final String inFileName = "input4.c";
+	private static final String outFileName = "output4.c";
 	//private static final String resultFileName = "testdriver.c";
 	private static String code = "";
 	
